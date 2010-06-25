@@ -1,0 +1,593 @@
+LOGS NOTIFICATION TOOL - logNOT
+
+Abstract
+
+logNOT is application that implements simple tool that can be 
+instructed to track and measure frequency of textual log items, 
+and to trigger specific action/command when ever frequency of 
+monitored log item or items goes above or bellow defined 
+frequency limits. Frequency is defined as number of item 
+occurrence per time period. logNOT can process logs in “real-time”
+ at moment immediately after logs are writhed to log file. Action 
+or command that will be triggered by logNOT is defined by user, 
+can be any executable program or shell script. What this action 
+will do depends on user. Other words it is building block of 
+larger system implementation, and its goal is to simplify that 
+implementation, removing one of the problems that disrupt big 
+picture. logNOT is very lightweight application that dose not add 
+any significant payload to system.
+
+
+
+Table of Contents
+
+        0.1 Introduction
+        0.2 Important requirements and dependencies
+        0.3 Features
+        0.4 Installation
+            0.4.1 Running
+        0.5 Log file monitoring
+        0.6 Logs filtering
+            0.6.1 Log file permissions
+        0.7 logNOT configuration
+            0.7.1 Command line options
+                    Usage:
+                    
+                    Options:
+            0.7.2 Configuration file
+        0.8 Summary
+        0.9 Examples
+            0.9.1 Notifying on system errors
+            0.9.2 SSH brute force attack detection
+            0.9.3 Log size notification
+
+
+0.1 Introduction
+
+Motivation behind this project is to get simple reliable way of 
+fetching logs of interest at “real-time” for monitoring or 
+indexing purpose. Concept of real-time here is “soft real-time”, 
+there is no guarantee that logNOT will respond within strict 
+deadline, but in most cases it will respond in hundreds of 
+second, except in cases of extra ordinary load which can cause 
+such slow response of all applications. Purpose of log monitoring 
+is ability to define and extract certain events of interest from 
+the system. Such as brute force attack detection on service, 
+detection of possible system problems, and so on. Once this is 
+done, left to do is handling this events, like providing 
+notifications or any action required. The other possible aspect 
+of logNOT is to serve as middle connection between logs and 
+indexing service. logNOT already knows to track and extract 
+events from logs. The other part of logNOT can be implementation 
+of ability to pass all and/or filtered logs to specific service 
+that will serve for further analyser of log content. But this is 
+not primary goal for initial launch of this project.
+
+0.2 Important requirements and dependencies
+
+• logNOT is designed and implemented only to work on Linux 
+  systems
+
+• libpcre 8.02 or higher (Perl Compatible Regular Expressions C 
+  library)
+
+• Linux kernel 2.6.18 or higher
+
+• INOTIFY feature enabled in Linux kernel.
+
+Symbol: INOTIFY [=y] 
+
+Prompt: Inotify file change notification support
+
+  Defined at fs/notify/inotify/Kconfig:1 
+
+  Location: 
+
+    -> File systems 
+
+  Selected by: AUDIT_TREE [=n] && AUDITSYSCALL [=n] 
+
+    
+
+Symbol: INOTIFY_USER [=y] 
+
+Prompt: Inotify support for userspace
+
+  Defined at fs/notify/inotify/Kconfig:16 
+
+  Location: 
+
+    -> File systems
+
+  Selects: FSNOTIFY [=y] 
+
+0.3 Features
+
+• Real-time monitoring of log files.
+
+• Down-bound and and up-bound frequency of logs notification.
+
+• Log file size notification.
+
+• Filtering logs with PCRE (Perl Compatible Regular Expressions).
+
+• Frequency count by CRC (Cycle Redundancy Check) of logs match. 
+  (Meaning explained later)
+
+• Automatic handling of logrotate. There is no need to configure 
+  logrotate to send SIGHUP signal to logNOT for files monitored 
+  by logNOT. Actually, if you send SIGHUP signal to logNOT it 
+  will only reopen its own log file.
+
+0.4 Installation
+
+Currently logNOT is distributed as source code package that can 
+be fetched from http://www.github.com. After fetching logNOT 
+package it must be extracted
+
+~# tar zxf lognot-0.1.tar.gz
+
+After extraction with above command in current working directory 
+will be created lognot-0.1 directory. Change directory to newly 
+extracted directory:
+
+~# cd lognot-0.1
+
+Next step is to run configure script:
+
+~# ./configure --prefix=/usr
+
+For debug version run configure following way:
+
+~# ./configure --prefix=/usr --enable-debug
+
+To include additional debug features as dead lock detection and 
+additional logs, export CXXFLAGS=” -D_DEBUG” variable:
+
+~# export CXXFLAGS=" -D_DEBUG"; ./configure --enable-debug
+
+In order to compile run:
+
+~# make all
+
+And as final step install logNOT by executing:
+
+~# make install
+
+0.4.1 Running
+
+To run logNOT you basically need to create configuration file 
+that will be specified. Sample configuration file 'sample.conf' 
+is distributed with source code. By default logNOT will execute 
+in foreground and write its output to syslog as in following 
+example:
+
+~# lognot -c sample.conf
+
+By default, if configuration file is not specified logNOT will 
+search for it at /etc/lognot.conf, if configuration file is not 
+found logNOT will exit with error. If you want logNOT to write on 
+standard output specify -s flag as following:
+
+~# lognot -c sample.conf -s
+
+If you want to specify log file where logNOT should write its 
+logs use -l <file path> flag. And finally to run logNOT as daemon 
+specify -d flag:
+
+~# lognot -d -c sample.conf
+
+Above will run logNOT as background process which will use 
+sample.conf as configuration and write its own logs to syslog. 
+More options like running under specific user account and so on 
+is explained in logNOT configuration section of this document. If 
+logNOT hangs at startup, check the log or run it with -s flag to 
+see error message.
+
+0.5 Log file monitoring
+
+logNOT will perform “real-time” monitoring from moment it opens 
+log file for reading. It will position at end of log file 
+ignoring all logs from history. When ever content of file 
+changes, logNOT will read all new lines till end of last 
+completed line, and process each of extracted lines. If there is 
+no changes logNOT will not execute at all. It will not do 
+periodic checks for changes as similar tools do, rather it will 
+wait for kernel notification about current state of file. This 
+cycle will repeat for all time logNOT is running. History in the 
+logs that appears in file before logNOT starts to monitor it, are 
+not subject of interest, monitoring in this case is about knowing 
+what is going on at presence, what was happen before is subject 
+of logs history analysis. Mixing this two leads to logical 
+issues, and presents miss approach to problem.
+
+0.6 Logs filtering
+
+Detecting specific log items in the log is defined using perl 
+compatible regular expressions. Any log item that match to 
+specified regular expression will be counted. More than one 
+criteria are allowed to be defined per single log. logNOT is 
+configured trough ini configuration, each log item that need to 
+be monitored is specified by ini section, multiple ini section 
+can refer to single log, that way you can monitor multiple log 
+items per single log, and define different behaviour for each of 
+them. Following example represents configuration for ssh brute 
+force attack detection.
+
+[SSH_AUTH]
+
+regex=error: PAM: Authentication failure for illegal user (.*) 
+from (.*)$
+
+path = /var/log/messages
+
+usecrc=TRUE
+
+upbound_action = /root/block_source "$2"
+
+upbound_freq=5/30
+
+
+
+[SSH_IU]
+
+regex=\]: Invalid user (.*) from (.*)$
+
+path = /var/log/messages
+
+usecrc=TRUE
+
+upbound_action = /root/block_source "$2"
+
+upbound_freq=5/30
+
+Meaning of above example is that if there is more then 5 failed 
+authentication attempts within 30 seconds then, call the script 
+that will block source ip. Another example would be to define 
+upbound_action to block source address matched from log item, by 
+calling iptables directly.
+
+upbound_action=/sbin/iptables -I SSHD -s $2 -j DROP
+
+In above example:
+
+  regex parameter defines filter for logs by specifying perl 
+  regular expression
+
+  upbound_freq defines how many times log must repeat in some 
+  time period, in format count/time in seconds
+
+  path defines monitored log file location
+
+  upbound_action specifies command to execute on matching 
+  criteria regex and upbound_freq
+
+  usecrc will cause logNOT to trigger notification only if log 
+  repeats more then 5 times from same IP
+
+logNOT have ability to pass regular expression matches from 
+matched log item in form $#, where $1 is first match $2 second 
+and so on... Above expression is defined to extract ip for which 
+asterisk was reported, failed registration. If you need to use $ 
+character in action specification escape it with \ character as 
+'\$', if you need to specify \ character specify it as '\\'. In 
+general case, there can be multiple different messages that match 
+to same regular expression, that's why logNOT takes crc of each 
+match and counts per this crc. For example, if you have many 
+users and all they authenticate at same time it will not trigger 
+logNOT if 6 different users miss type password or username. But 
+if you have more then 5 authentication attempts failed from same 
+ip address in 30 seconds that will trigger logNOT. Cause of this, 
+special care must be taken when specifying expression with usecrc 
+option enabled, if it includes date time part of message for 
+example that will change for almost each new log item, it may not 
+work as expected to work. Almost any log includes date and time, 
+but its easy to avoid this issue, cause logNOT will not crc whole 
+log item but part of it that is exact match to what is specified 
+by match_expr. Specifying $@ will pass complete log item, this 
+can be used for passing filtered logs (or even all logs) to 
+another application if required. logNOT also allows to specify 
+down bound frequency, that will trigger action if specified log 
+item is less frequent then downbound_freq. Reason behind this is 
+that you may expect logs from some applications on regular base, 
+and if they are not present would mean that something is wrong 
+and some action should be taken in that case. Setting 0/0 for 
+frequency, either for up bound or down bound frequency disables 
+frequency detection and notification will be triggered on every 
+match.
+
+0.6.1 Log file permissions
+
+logNOT requires read permissions on files it monitors, and read 
+permissions on directory where log file is placed if log will be 
+rotated. Cause it is using inotify Linux kernel feature that can 
+only watch inode if you have read permissions on it.
+
+0.7 logNOT configuration
+
+There is two types of configuration parameters to logNOT, and 
+each is used for appropriate options. There are command line 
+options to start logNOT with, and configuration file.
+
+0.7.1 Command line options
+
+  Usage:
+
+lognot --config <filename> [options] lognot --test <regexp>
+
+  
+
+
+    Options:                                                       
+  -h --help                  Display this usage information and    
+                             exit.                                 
+  -c --config <filename>     This is configuration file location   
+                             (required).                           
+  -l --logfile <filename>    Write logs in to this file.           
+  -d --daemon                Start as background application.      
+  -s --stdout                Write logs to standard output.        
+  -u --uid <uid>             Change uid                            
+  -g --gid <gid>             Change gid                            
+  -w --chdir <directory>     Change working directory              
+  -p --pid <full path>       Set process pid file path. Applies    
+                             with --daemon only.                   
+  -t --test <filename>       Test specified configuration file.    
+  -T --retest <reg expr>     Test specified regular expression     
+                             on line/s from standard input.        
+  -v --verbose               Run as debug.                         
+                             (Careful! frequent logs)              
+  -V --version               Print version information and exit.   
+
+
+0.7.2 Configuration file
+
+As already shown, logNOT configuration is simple ini file. Each 
+section of ini file defines single log item to monitor, and as we 
+stated before multiple items can refer to same log file. Meaning 
+of each configuration file options is described in following 
+list.
+
+  [general] Is a special section, meant to be used for global 
+  configuration parameters and default configuration values.
+
+Following are global options which apply only to [general] 
+section:
+
+  athread_count Specify number of action threads. logNOT notifies 
+  by executing specified action. Each action is first pushed to 
+  execution queue, actions pending in the queue are fetched by 
+  action threads and executed. If there is only one thread and 
+  multiple actions triggered at same time, actions would be 
+  executed sequentially one by one. If there is more then one 
+  action thread, then more then one action can be triggered at 
+  same time. Default value is 2.
+
+  uid Allows you to specify effective user id for logNOT process. 
+  Command line option overrides configuration file if specified.
+
+  gid Allows you to specify effective group id for logNOT 
+  process. Command line option overrides configuration file if 
+  specified.
+
+All other options can be specified in [general] section, and they 
+will stand for default in all other log items sections where this 
+options are not specified. logNOT is configuration is organized 
+per monitored items, each new item creates as new section in 
+configuration file [item name]. Bellow list of options can be 
+specified per each item:
+
+  path This option is to specify location of monitored file. This 
+  options is required, if not specified logNOT will fail at start 
+  up with error.
+
+  regex Specify here with perl regular expression what are the 
+  logs of interest, if you want all logs simple set .* for the 
+  value, or don't specify at all cause default value is .* . For 
+  more options please refer to PCRE documentation, and examples.
+
+  upbound_action Is to specify what should be executed, other 
+  words specify how to notify about watched log events. It allows 
+  to specify shell command which will be executed by calling 
+  system() function from C standard library. This option also 
+  allows to pass regular expression matches to specified shell 
+  commands, respectively $0 stands for match 0, $1 for match 1, 
+  and so on in array of matches from regular expression (refer to 
+  PCRE documentation for more information). If you want to pass 
+  complete current log line where event triggered with use $@. If 
+  $ character is otherwise used and not to specify argument it 
+  should be escaped with backslash \ escape.
+
+  upbound_freq If not specified upbound_action will be executed 
+  on each match. Otherwise it defines how many times monitored 
+  log item ca repeat in some time period specified in seconds 
+  units before logNOT will execute up bound action. Frequency is 
+  specified in format <count>/<time seconds>.
+
+  downbound_action Is equivalent to upbound_action, with 
+  difference its executed in case monitored item frequency drops 
+  bellow value specified with downbound_freq option and it dose 
+  not accept arguments from regular expression match, simple 
+  cause it actives when no logs that match.
+
+  downbound_freq Define down limit for frequency expected for 
+  monitored log item to appear. If not specified or specified as 
+  0/<time> option is disabled.
+
+  usecrc This option accepts 0,1,yes,no,true or false values, and 
+  is case insensitive. If enabled it will tell logNOT to measure 
+  frequency per CRC (Cycle Redundancy Check) of $0 match. This is 
+  useful if you want to trigger action only if repeated logs are 
+  exactly same.
+
+  size Specify size of file on which if reached logNOT needs to 
+  notify by executing command specified by size_action. logNOT 
+  will also notify when ever size of file reaches 2xsize, 3xsize 
+  and so on, on each value which is multiple of size. This is not 
+  exact accurate on level of single byte, especially for small 
+  values of size, simple cause writhed data at once can reach 
+  multiple of size in single event and in that case logNOT will 
+  notify only once. Its easy to check, simple set size to 1B (1 
+  byte) and write some text line to monitored file it will 
+  definitely be more then one byte. Value is specified as 
+  <number><unit>, where unit can be B - for bytes, K - for 
+  kilobytes, M - for megabytes and only on 64 bit systems G - for 
+  gigabytes. If unit not specified but only number default unit 
+  is byte.
+
+  size_action Allows to define action to be executed when ever 
+  monitored file reaches multiple of size value option.
+
+0.8 Summary
+
+logNOT is meant to be simple, easy to manage and control. logNOT 
+can be deployed as stand alone application for monitoring logs, 
+and also can be easily integrated as part of bigger system. 
+logNOT can monitor for occurrence of specific log item/s, 
+specified by regular expressions, and allows to specify any 
+desired log item frequency as additional condition for firing 
+action. And logNOT provides mechanism for filtering, extracting 
+and passing information from logs, and as well passing of 
+complete log items.
+
+0.9 Examples
+
+0.9.1 Notifying on system errors
+
+This is simplest example used to detect any logs that contains 
+word error. Following is content of logNOT configuration file.
+
+[messages]
+
+path=/var/log/messages
+
+regex=error
+
+upbound_action = /root/scripts/email_warning $@
+
+/root/scripts/email_warning is a shell script you can create 
+using sendmail or similar tools for emailing warning message 
+about potential issues on the system. One example would be 
+following:
+
+#!/bin/bash
+
+
+
+cat | sendmail -t <<EOF 
+
+from: system1@domainname
+
+to: user@domainname
+
+subject: System Warning
+
+
+
+There is following error message in the log:
+
+
+
+$@
+
+
+
+
+
+EOF
+
+
+
+exit $? 
+
+0.9.2 SSH brute force attack detection
+
+Following example demonstrate how to block source ip for 15 
+minutes if ssh authentication fails more then 3 times in one 
+minute.
+
+[SSH_AUTH] 
+
+regex=error: PAM: Authentication failure for (.*) from (.*)$ 
+
+path = /var/log/messages 
+
+usecrc=TRUE
+
+upbound_action = /root/block_source "$2" 
+
+upbound_freq=3/60 
+
+
+
+[SSH_IU] 
+
+regex=\]: Invalid user (.*) from (.*)$ 
+
+path = /var/log/messages 
+
+usecrc=TRUE 
+
+upbound_action = /root/block_source "$2" 
+
+upbound_freq=3/60
+
+Script block_source used above as part of upbound_action can be 
+something like following:
+
+#!/bin/bash
+
+
+
+if [ -z "$1" ];then
+
+    # script requires argument
+
+    exit 0 
+
+fi
+
+
+
+# log can contain domain name instead ip address and we want to 
+resolve to ip 
+
+# it dosen't metter if ping replies or not
+
+ip=`ping -c 1 -i 0.1 $1 | pcregrep "^PING" | awk '{ print $3 }'`
+
+ip=${ip##\(} ip=${ip%%\)}
+
+
+
+#make log about this action and block source ip
+
+logger -t "ssh_bf_detection" "BLOCKING IP: $ip" 
+
+iptables -I INPUT -s $ip -j DROP
+
+
+
+# unblock ip after 15 minutes
+
+chain=`iptables -n --line-numbers -L INPUT | grep "$ip" | awk 
+'{print $1}'`
+
+echo "iptables -D INPUT $chain" | at now + 15 minutes
+
+
+
+exit 0
+
+0.9.3 Log size notification
+
+In this example we simple track size of log and we want to email 
+warning message if log size goes above 100 megabytes:
+
+[messages]
+
+path=/var/log/messages
+
+size=100M
+
+size_action=/root/scripts/email_warning “Message about log size”
+
