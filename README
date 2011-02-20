@@ -17,6 +17,8 @@ implementation, removing one of the problems that disrupt big
 picture. logNOT is very lightweight application that dose not add 
 any significant payload to system.
 
+Abstract
+
 
 
 Table of Contents
@@ -132,6 +134,10 @@ will be created lognot-0.1 directory. Change directory to newly
 extracted directory:
 
 ~# cd lognot-0.1
+
+Execute autogen.sh script in directory:
+
+~# ./autogen.sh
 
 Next step is to run configure script:
 
