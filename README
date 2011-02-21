@@ -17,8 +17,6 @@ implementation, removing one of the problems that disrupt big
 picture. logNOT is very lightweight application that dose not add 
 any significant payload to system.
 
-Abstract
-
 
 
 Table of Contents
@@ -35,8 +33,8 @@ Table of Contents
             0.7.1 Command line options
                     Usage:
                     
-                    Options:
             0.7.2 Configuration file
+            0.7.3 Reloading configuration
         0.8 Summary
         0.9 Examples
             0.9.1 Notifying on system errors
@@ -124,8 +122,8 @@ Prompt: Inotify support for userspace
 0.4 Installation
 
 Currently logNOT is distributed as source code package that can 
-be fetched from http://www.github.com. After fetching logNOT 
-package it must be extracted
+be fetched from https://github.com/fkasumovic/logNOT. After 
+fetching logNOT package it must be extracted
 
 ~# tar zxf lognot-0.1.tar.gz
 
@@ -324,7 +322,7 @@ lognot --config <filename> [options] lognot --test <regexp>
   
 
 
-    Options:                                                       
+  Options:                                                         
   -h --help                  Display this usage information and    
                              exit.                                 
   -c --config <filename>     This is configuration file location   
@@ -442,6 +440,18 @@ specified per each item:
 
   size_action Allows to define action to be executed when ever 
   monitored file reaches multiple of size value option.
+
+0.7.3 Reloading configuration
+
+There is situations when its useful to change configuration of 
+logNOT with shortest interrupt possible on its current 
+monitoring. Sending SIGUSR1 signal to logNOT will cause it to 
+reload its configuration file. If there is errors in 
+configuration, logNOT will log errors and continue with original 
+configuration without interrupt. If everything is ok with new 
+configuration, logNOT will reinitialize to monitor per new 
+configuration settings. Always check if configuration is 
+successfully reloaded after making changes.
 
 0.8 Summary
 
