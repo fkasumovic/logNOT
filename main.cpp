@@ -261,7 +261,7 @@ bool processLogFile(LNLogFile *pFile) {
 				LNActionThreads::enqueue(pItem->getSizeAction());
 			}
 			upb_action = pItem->getUpBoundAction();
-			if(!upb_action.size()) {
+			if(!upb_action.size() || !line.size()) {
 				// no reason to match and spend cpu time
 				continue;
 			}

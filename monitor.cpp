@@ -692,6 +692,13 @@ bool LNLogFile::fetchNextLog(std::string &item) {
 			m_trash_hold = trash;
 			item_extracted = true;
 			break;
+		} else if (!(*m_read_buf)) {
+			// empty log, zeros written to file
+			item = m_trash_hold + m_read_buf;
+			trash = m_read_buf;
+			m_trash_hold = trash;
+			item_extracted = true;
+			break;
 		} else {
 			m_trash_hold += m_read_buf;
 		}
