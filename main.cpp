@@ -54,6 +54,7 @@ void terminationHandler (int signum) {
 				LNLog::setupLogFacility(LNLog::FILE_LOG, lfp);
 			}
 		}
+		return;
 		break;
 	case SIGTERM:
 		LNLog::logInfo("Received signal SIGTERM. Terminating ...");
