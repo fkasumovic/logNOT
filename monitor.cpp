@@ -491,6 +491,7 @@ LNLogItem *LNLogItems::getNext() {
 LNLogFile::LNLogFile() {
 	// initialize file descriptor to none
 	m_fd = 0;
+	m_curPos = 0;
 	
 	// Avoid frequent memory reallocation most of logs are less
 	// then 512 bytes
@@ -585,7 +586,9 @@ bool LNLogFile::open(const std::string &path, LNLogFile::Type type, const std::s
 			return false;
 		}
 		if(type == FILE && seekEnd) {
-			lseek(fd, 0, SEEK_END);
+			m_curPos = lseek(fd, 0, SEEK_END);
+		} else {
+			m_curPos = 0;
 		}
 	}
 
@@ -614,11 +617,26 @@ bool LNLogFile::open(const std::string &path, LNLogFile::Type type, const std::s
 }
 
 bool LNLogFile::reopen(bool seekEnd) {
-	if(!m_fpath.size()) {
+	LNMutexLocker lock(*this);
+	off_t oldPos = 0;
+	if (!m_fpath.size()) {
 		LNLog::logError("Can't reopen file was never open before.");
 		return false;
 	}
-	return open(m_fpath, m_type, m_sep, seekEnd);
+	oldPos = m_curPos;
+	if (open(m_fpath, m_type, m_sep, seekEnd)) {
+		fstat(m_fd, &m_fstats);
+		// check if file truncated
+		if ( !(oldPos > m_fstats.st_size) ) {
+			// continue from last position
+			m_curPos = lseek(m_fd, oldPos, SEEK_SET);
+		} else {
+			// cleanup last partial read it's not valid anymore
+			m_trash_hold = "";
+		}
+		return true;
+	}
+	return false;
 }
 
 bool LNLogFile::close() {
@@ -675,6 +693,9 @@ bool LNLogFile::fetchNextLog(std::string &item) {
 					  sizeof(m_read_buf) - sizeof(char));
 		} while(errno == EAGAIN && bytes_read <= 0);
 
+		// update current position
+		m_curPos = lseek(m_fd, 0, SEEK_CUR);
+
 		if(bytes_read <= 0) {
 			break; // end of file;
 		} else if(bytes_read < 0 && errno != EAGAIN) {
@@ -709,7 +730,7 @@ bool LNLogFile::fetchNextLog(std::string &item) {
 size_t LNLogFile::getPosition() {
 	LNMutexLocker lock(*this);
 	if(m_fd) {
-		return lseek(m_fd, 0, SEEK_CUR);
+		return m_curPos;
 	}
 	return 0;
 }
@@ -720,10 +741,9 @@ void LNLogFile::handleIfTruncated() {
 		return;
 	}
 	fstat(m_fd, &m_fstats);
-	off_t cur_pos = lseek(m_fd, 0, SEEK_CUR);
-	if(cur_pos > m_fstats.st_size) {
+	if(m_curPos > m_fstats.st_size) {
 		// REPOSITION AT END OF FILE
-		lseek(m_fd, 0, SEEK_END);
+		m_curPos = lseek(m_fd, 0, SEEK_END);
 		LNLog::logInfo("File '%s' was truncated to %d bytes. "
 			       "logNOT repositioned.", m_fname.c_str(), m_fstats.st_size);
 	}
@@ -818,7 +838,8 @@ bool LNLogFiles::close(const std::string &path) {
 		delete pf;
 		res = true;
 	}
-	LNLog::logWarning("Required to close non existing file by path '%s'.", path.c_str());
+	LNLog::logWarning("Required to close non existing file by path '%s'.",
+			  path.c_str());
 	return res;
 }
 
