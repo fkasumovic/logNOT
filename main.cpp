@@ -49,10 +49,12 @@ void terminationHandler (int signum) {
 			if(!lfp) {
 				LNLog::setupLogFacility(LNLog::SYSTEM_LOG);
 				LNLog::logError("Failed to open/create log file '%s'. %s\n",
-						cl_opts["logfile"].c_str(), strerror(errno));
+						cl_opts["logfile"].c_str(),
+						strerror(errno));
 			} else {
 				LNLog::setupLogFacility(LNLog::FILE_LOG, lfp);
 			}
+			LNLog::logInfo("Log file re-opened.");
 		}
 		return;
 		break;
