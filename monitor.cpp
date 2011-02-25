@@ -1071,6 +1071,15 @@ bool LNInotify::handleIfFileRemoved(LNLogFile *pFile, int wd, int mask) {
 			return false;
 		}
 	} else {
+		// simple reinitialize monitoring of file.
+		pFile->reopen(true);
+		if ( mask & IN_MOVE_SELF ) {
+			this->rmWatch(wd);
+		} else {
+			m_watchMap.erase(wd);
+		}
+		this->addWatch(pFile);
+
 		LNLog::logWarning("Monitored file '%s' attributes changed.",
 				  pFile->getFilePath().c_str());
 		return false;
