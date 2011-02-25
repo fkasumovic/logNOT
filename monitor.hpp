@@ -233,6 +233,7 @@ private:
 	LNLogItems m_items;
 	char m_read_buf[READ_BUFFER_SIZE];
 	struct stat m_fstats;
+	off_t m_curPos;
 };
 
 //----------------------------------------------------------------------------
