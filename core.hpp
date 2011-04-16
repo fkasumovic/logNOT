@@ -109,7 +109,7 @@ public:
 
 	/* TO-DO: Implement cancel and mechanism for terminating thread
 	   */
-	
+	void terminate();
 private:
 	LNMutex m_running;
 	pthread_t m_thread;
@@ -137,7 +137,7 @@ private:
 /*! This class can load whole ini file into intuitive to use collection.
  *  Example:
  *      std::string item_value = inifile["section_name"]["item_name"];
- *  Primary use in this project is to load and read current asterisk settings.
+ *  Primary use in this project is to load and read current settings.
  *
  *  Class is not thread safe, when used Lock and Unlock methods must be called.
  *  Or use LNMutexLocker for simple automatic lock/unlock of critical sections.

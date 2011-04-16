@@ -172,6 +172,9 @@ void *internal_thread_fnc(void *pargs) {
 	internal_thread_args *iargs = (internal_thread_args*)pargs;
 	LNMutexLocker lock(*(iargs->prunning));
 
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
+
 	pret = iargs->mainFnc(iargs->pargs);
 
 	delete[] iargs;
@@ -225,6 +228,12 @@ bool LNThread::isRunning() {
 	}
 	m_running.unlock();
 	return false;
+}
+
+void LNThread::terminate() {
+	if (isRunning()) {
+		pthread_cancel(m_thread);
+	}
 }
 
 //---------------------------------------------------------------------------------------

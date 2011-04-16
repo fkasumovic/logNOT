@@ -32,9 +32,8 @@ bool loadConfiguration(bool reload);
  *  by system and mysql to.
  */
 void terminationHandler (int signum) {
-	// we need to skip pthread_mutex_lock
-	// all other threads are suspended
-	// if anyone holds lock this handler will dead-lock
+	// we need to skip pthread_mutex_lock all other threads are
+	// suspended if anyone holds lock this handler will dead-lock
 	LNDisableMutex dm();
 
 	int ret_code = 0;
@@ -376,7 +375,7 @@ int main_proc(void *args) {
 	return 0;
 }
 
-int main(int argc, char **argv) {
+int main ( int argc, char **argv ) {
 	LNLog::setupLogFacility(LNLog::SYSTEM_LOG);
 	LNGlobals::set(PROGRAM_NAME, PROGRAM_NAME);
 
