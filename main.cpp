@@ -75,6 +75,7 @@ void terminationHandler (int signum) {
 	LNLog::logInfo("%s exit.", LNGlobals::get(PROGRAM_NAME).c_str());
 	LNLog::closeLog();
 	exit(ret_code);
+	return;
 }
 
 /*! Just to registering signal handlers for stopping dialer.

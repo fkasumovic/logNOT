@@ -1070,11 +1070,7 @@ bool LNInotify::handleIfFileRemoved(LNLogFile *pFile, int wd, int mask) {
 			       pFile->getFilePath().c_str());
 		if (pFile->isOpen()) {
 			pFile->close();
-			if ( mask & IN_MOVE_SELF ) {
-				this->rmWatch(wd);
-			} else {
-				m_watchMap.erase(wd);
-			}
+			this->rmWatch(wd);
 			LNLog::logInfo("Watch directory '%s'.",
 				       pFile->getDirectoryPath().c_str());
 			this->addWatch(pFile, true);
@@ -1094,14 +1090,10 @@ bool LNInotify::handleIfFileRemoved(LNLogFile *pFile, int wd, int mask) {
 	} else {
 		// simple reinitialize monitoring of file.
 		pFile->reopen(true);
-		if ( mask & IN_MOVE_SELF ) {
-			this->rmWatch(wd);
-		} else {
-			m_watchMap.erase(wd);
-		}
+		this->rmWatch(wd);
 		this->addWatch(pFile);
 
-		LNLog::logWarning("Monitored file '%s' attributes changed.",
+		LNLog::logWarning("Monitoring of file '%s' reinitialized.",
 				  pFile->getFilePath().c_str());
 		return false;
 	}
@@ -1168,7 +1160,6 @@ LNLogEvents * LNInotify::readEvents() {
 		if ( i != m_watchMap.end() ) {
 			pFile = i->second;
 		} else {
-			LNLog::logError("Inotify monitored file not found.");
 			k += EVENT_SIZE + pEvent->len;
 			continue;
 		}
@@ -1185,6 +1176,7 @@ LNLogEvents * LNInotify::readEvents() {
 				pResult->append(pFile);
 			}
 		}
+		fremoved = false;
 
 		k += EVENT_SIZE + pEvent->len;
 		count++;
