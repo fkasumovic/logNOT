@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset='utf-8'>
+
+  <title>fkasumovic/logNOT @ GitHub</title>
+
+  <style type="text/css">
+    body {
+      margin-top: 1.0em;
+      background-color: #d88b02;
+      font-family: Helvetica, Arial, FreeSans, san-serif;
+      color: #ffffff;
+    }
+    #container {
+      margin: 0 auto;
+      width: 700px;
+    }
+    h1 { font-size: 3.8em; color: #2774fd; margin-bottom: 3px; }
+    h1 .small { font-size: 0.4em; }
+    h1 a { text-decoration: none }
+    h2 { font-size: 1.5em; color: #2774fd; }
+    h3 { text-align: center; color: #2774fd; }
+    a { color: #2774fd; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    .download { float: right; }
+    pre { background: #000; color: #fff; padding: 15px;}
+    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
+    .footer { text-align:center; padding-top:30px; font-style: italic; }
+  </style>
+</head>
+
+<body>
+  <a href="https://github.com/fkasumovic/logNOT"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+
+  <div id="container">
+
+    <div class="download">
+      <a href="https://github.com/fkasumovic/logNOT/zipball/master">
+        <img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+      <a href="https://github.com/fkasumovic/logNOT/tarball/master">
+        <img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+    </div>
+
+    <h1><a href="https://github.com/fkasumovic/logNOT">logNOT</a>
+      <span class="small">by <a href="https://github.com/fkasumovic">fkasumovic</a></span></h1>
+
+    <div class="description">
+      logNOT is application that implements simple tool that can be instructed to track and measure frequency of textual log items, and to trigger specific action/command when ever frequency of monitored log item or items goes above or bellow defined frequency limits
+    </div>
+
+    
+      <p>• Real-time monitoring of log files.
+
+• Down-bound and and up-bound frequency of logs notification.
+
+• Log file size notification.
+
+• Filtering logs with PCRE (Perl Compatible Regular Expressions).
+
+• Frequency count by CRC (Cycle Redundancy Check) of logs match. (Meaning explained later)
+
+• Automatic handling of logrotate. 
+  There is no need to configure logrotate to send SIGHUP signal to logNOT for files monitored by logNOT. Actually, if you send SIGHUP signal to logNOT it will only reopen its own log file.</p>
+    
+
+    
+      <h2>Dependencies</h2>
+      <p>• logNOT is designed and implemented only to work on Linux systems
+
+• libpcre 8.02 or higher (Perl Compatible Regular Expressions C library)
+
+• Linux kernel 2.6.18 or higher
+
+• INOTIFY feature enabled in Linux kernel.
+
+Symbol: INOTIFY [=y] Prompt: Inotify file change notification support > Defined at fs/notify/inotify/Kconfig:1
+
+Location: > -> File systems Selected by: AUDIT_TREE [=n] && AUDITSYSCALL [=n]
+Symbol: INOTIFY_USER [=y] Prompt: Inotify support for userspace > Defined at fs/notify/inotify/Kconfig:16
+
+Location: > -> File systems Selects: FSNOTIFY [=y]</p>
+    
+
+    
+      <h2>Install</h2>
+      <p>Currently logNOT is distributed as source code package that can be fetched from https://github.com/fkasumovic/logNOT. After fetching logNOT package it must be extracted
+
+~# tar zxf lognot-0.1.tar.gz
+After extraction with above command in current working directory will be created lognot-0.1 directory. Change directory to newly extracted directory:
+
+~# cd lognot-0.1
+Execute autogen.sh script in directory:
+
+~# ./autogen.sh
+Next step is to run configure script:
+
+~# ./configure --prefix=/usr
+For debug version run configure following way:
+
+~# ./configure --prefix=/usr --enable-debug
+To include additional debug features as dead lock detection and additional logs, export CXXFLAGS=” -D_DEBUG” variable:
+
+~# export CXXFLAGS=" -D_DEBUG"; ./configure --enable-debug
+In order to compile run:
+
+~# make all
+And as final step install logNOT by executing:
+
+~# make install</p>
+    
+
+    
+      <h2>License</h2>
+      <p>GPLv3</p>
+    
+
+    
+      <h2>Authors</h2>
+      <p>      Faruk Kasumovic</p>
+    
+
+    
+
+    <h2>Download</h2>
+    <p>
+      You can download this project in either
+      <a href="https://github.com/fkasumovic/logNOT/zipball/master">zip</a> or
+      <a href="https://github.com/fkasumovic/logNOT/tarball/master">tar formats.
+    </p>
+    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+      by running:
+      <pre>$ git clone git://github.com/fkasumovic/logNOT</pre>
+    </p>
+
+    <div class="footer">
+      get the source code on GitHub : <a href="https://github.com/fkasumovic/logNOT">fkasumovic/logNOT</a>
+    </div>
+
+  </div>
+
+</body>
+</html>
