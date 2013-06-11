@@ -59,7 +59,7 @@ void *_executePendingActions(void *pargs) {
 		}
 		// code to actually execute specified action
 		ret_code = system(action.c_str());
-		LNLog::logDebug(" -- Action '%s' executed with return code %d.",
+		LNLog::logInfo(" -- Action '%s' executed with return code %d.",
 				action.c_str(),
 				ret_code);
 	} while(true);
