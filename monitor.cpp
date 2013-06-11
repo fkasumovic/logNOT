@@ -689,9 +689,13 @@ bool LNLogFile::fetchNextLog(std::string &item) {
 
 		memset(m_read_buf, 0, sizeof(m_read_buf));
 		do {
+			LNLog::logDebug("-- Read file %s", this->m_fpath.c_str());
 			bytes_read = read(m_fd, m_read_buf,
 					  sizeof(m_read_buf) - sizeof(char));
-		} while(errno == EAGAIN && bytes_read <= 0);
+			LNLog::logDebug("-- Bytes read %ld (%s) from %s", bytes_read,
+				(bytes_read==EAGAIN?"THERE IS MORE":"NO MORE"), 
+				this->m_fpath.c_str());
+		} while(errno == EAGAIN && bytes_read == 0);
 
 		// update current position
 		m_curPos = lseek(m_fd, 0, SEEK_CUR);
