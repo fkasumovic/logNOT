@@ -1,8 +1,6 @@
-#ifndef LOG_NOT_CORE_H
-#define LOG_NOT_CORE_H
-
 #include "debug.hpp"
 #include "utility.hpp"
+#include "core.hpp"
 
 #include <syslog.h>
 #include <stdarg.h>
@@ -18,13 +16,15 @@ unsigned int LNLog::prev_log_count = 0;
 time_t LNLog::prev_log_time = 0;
 
 
-static pthread_mutex_t log_mtx = PTHREAD_MUTEX_INITIALIZER;
+// static pthread_mutex_t log_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+static LNMutex log_mtx = LNMutex();
 
 #define LOCK_LOG \
-	pthread_mutex_lock(&log_mtx)
+	log_mtx.lock()
 	
 #define UNLOCK_LOG \
-	pthread_mutex_unlock(&log_mtx)
+	log_mtx.unlock()
 
 inline FILE* get_log_file_descriptor(LNLog::LNLogType type)
 {
@@ -312,4 +312,3 @@ LNException::LNException(const char *desc) throw() {
 
 //---------------------------------------------------------------------------------------
 
-#endif  // LOG_NOT_CORE_H

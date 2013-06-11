@@ -271,12 +271,15 @@ bool processLogFile(LNLogFile *pFile) {
 			if ( (0 < pItem->Match(line, matches))
 				&& (pItem->upBoundFreqExcess(matches[0])) ) {
 
+				LNLog::logInfo("[%s] Queueing new action.", pItem->getName().c_str());
 				LNActionThreads::enqueue(LNActionPreprocessor::run(
 						upb_action, line, matches));
 
 				// start to messuer all again, or notification will be
 				// executed on each next log that match.
 				pItem->resetUpBoundFreqMessuring(0);
+			} else {
+				LNLog::logDebug("Event didn't match item [%s].", pItem->getName().c_str());
 			}
 		}
 	}
