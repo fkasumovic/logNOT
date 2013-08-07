@@ -27,6 +27,7 @@ Makefile.in
 *.anjuta
 .anjuta_sym_db.db
 *.bak
+.gitconfig
 config.status
 TODO.tasks
 sysmonit.anjuta
