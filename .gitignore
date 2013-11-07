@@ -36,4 +36,5 @@ lognot.creator
 lognot.creator.user
 lognot.files
 lognot.includes
+version.hpp
 

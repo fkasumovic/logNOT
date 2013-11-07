@@ -394,8 +394,8 @@ int main ( int argc, char **argv ) {
 	}
 
 	if(cl_opts.count("version")) {
-		printf("\n %s version: " PROGRAM_VERSION "\n\n",
-		       LNGlobals::get(PROGRAM_NAME).c_str());
+		printf("\n %s version: " PROGRAM_VERSION " (%s)\n\n",
+		       LNGlobals::get(PROGRAM_NAME).c_str(), BUILD_DATE);
 		return 0;
 	}
 

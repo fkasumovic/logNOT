@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <time.h>
 
+#include "version.hpp"
+
 #define PROGRAM_CODENAME "LogsMonitoring"
 #define PROGRAM_NAME "lognot"
 #define PROGRAM_DESCRIPTION \
@@ -31,7 +33,12 @@
 	" defined by user, can be any executable program or shell\n" \
 	" script. What this action will do depends on user.\n"
 
-#define PROGRAM_VERSION "0.1 0"
+#ifdef COMMIT
+	#define PROGRAM_VERSION LOGNOT_VERSION COMMIT
+#else 
+	#define PROGRAM_VERSION LOGNOT_VERSION
+#endif
+
 #define PID_FILES_LOCATION "/var/run/"
 
 #define PATH_SEPARATOR '/'
