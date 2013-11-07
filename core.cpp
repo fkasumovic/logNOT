@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pcre.h>
+#include <unistd.h>
 
 #include "debug.hpp"
 #include "utility.hpp"
