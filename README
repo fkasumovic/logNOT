@@ -486,6 +486,8 @@ about potential issues on the system. One example would be
 following:
 
 #!/bin/bash
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffkasumovic%2FlogNOT.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffkasumovic%2FlogNOT?ref=badge_shield)
+
 
 
 
@@ -607,3 +609,7 @@ size=100M
 
 size_action=/root/scripts/email_warning “Message about log size”
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ffkasumovic%2FlogNOT.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ffkasumovic%2FlogNOT?ref=badge_large)
